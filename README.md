@@ -311,7 +311,7 @@ Almost finished! Let us compile the source files using webpack:
 npm start
 ```
 
-Open /dist/index.html in a web browser, you will see the text “My React App!” inside of it.
+Open `/dist/index.html` in a web browser, you will see the text "My React App!"
 
 ## Installing Webpack-dev-server
 
