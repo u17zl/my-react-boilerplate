@@ -48,6 +48,9 @@ Now `package.json` will look like this below:
 npm install webpack webpack-cli --save-dev
 ```
 
+- webpack module — which include all core webpack functionality
+- webpack-cli — enable running webpack from the command line
+
 ## Installing React
 
 ```bash
@@ -331,6 +334,122 @@ Then modify `package.json` start script like below:
 
 `--open` and `--hot` represents that it will open and refresh the web page whenever any change is made to components.
 
+## Adding source map for better error logs
+
+Since webpack bundles the code, source maps are mandatory to get a reference to the original file that raised an error. For example, if you bundle three source files (a.js, b.js, and c.js) into one bundle (bundler.js) and one of the source files contains an error, the stack trace will simply point to bundle.js. This is problematic as you probably want to know exactly if it’s the a, b, or c file that is causing an error.
+
+You can tell webpack to generate source maps using the devtool property of the configuration:
+
+```js
+module.exports = {
+  devtool: 'inline-source-map',
+  // … the rest of the config
+};
+```
+
+## Setting up ESLint
+
+Linter is a program that checks our code for any error or warning that can cause bugs. JavaScript’s linter, ESLint, is a very flexible linting program that can be configured in many ways.
+
+But before we get ahead, let’s install ESLint into our project:
+
+```bash
+npm --save-dev install eslint eslint-loader babel-eslint eslint-config-react eslint-plugin-react
+```
+
+- **eslint** is the core dependency for all functionalities, while **eslint-loader** enables us to hook eslint into webpack. Now since React used ES6+ syntax, we will add **babel-eslint** — a parser that enables eslint to lint all valid ES6+ codes.
+- **eslint-config-react** and **eslint-plugin-react** are both used to enable ESLint to use pre-made rules.
+
+Since we already have webpack, we only have to modify the config slightly:
+
+```js
+module.exports = {
+  // modify the module
+  module: {
+    rules: [{
+      test: /\.(js|jsx)$/,
+      exclude: /node_modules/,
+      use: ['babel-loader', 'eslint-loader'] // include eslint-loader
+    }]
+  },
+};
+```
+
+Then create an eslint config file named `.eslintrc` with this content:
+
+```json
+{
+  "parser": "babel-eslint",
+  "extends": "react",
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}
+
+```
+
+The config is basically saying, “Hey ESLint, please parse the code using babel-eslint before you check it, and when you’re checking it, please check if all the rules from our React rules config is passed. Take global variables from the environment of browser and node. Oh, and if it’s React code, take the version from the module itself. That way the user won’t have to specify the version manually.”
+
+Rather than specifying our own rules manually, we simply extend react rules which were made available by eslint-config-react and eslint-plugin-react.
+
+#### errors in eslint
+
+There’s a quick way to fix ESLint errors by using `eslint--fix`, and it’s actually good for a quick fix. Let’s add a script on our `package.json` file:
+
+```js
+"eslint-fix": “eslint --fix \"src/**/*.js\"", // the eslint script
+```
+
+Then run it with `npm run eslint-fix`
+
+
+## Adding CSS LESS processor
+
+In order to add the LESS processor into our React application, we will require both less and loader packages from webpack:
+
+```bash
+npm install --save-dev less less-loader css-loader style-loader
+```
+
+- **less-loader**: will compile our less file into css
+- **css-loader**: will resolve css syntax like import or url(). 
+- **style-loader**: will get our compiled css and load it up into `<style>` tag in our `bundle.js`. This is great for development because it lets us update our style on the fly, without needing to refresh the browser.
+
+Let's change `/src/styles/App.css` into `/src/styles/App.less`
+
+```less
+@color: #27aedb;
+h1 {
+  color: @color;
+  text-align: center;
+}
+```
+
+Now import our `App.less` file from `/components/index.js`:
+
+```js
+import "../styles/App.less";
+```
+
+Then update our webpack configuration module property:
+
+```js
+  {
+    test: /\.less$/,
+    use: [
+      'style-loader',
+      'css-loader',
+      'less-loader',
+    ],
+  }
+```
+
 ## Final Todos
 
 Final file structure:
@@ -364,6 +483,10 @@ Last thing is to run:
 npm start
 ```
 
+Enjoy it!
+
 ## Reference
 
-https://medium.com/hackernoon/how-to-build-a-react-project-from-scratch-using-webpack-4-and-babel-56d4a26afd32
+- https://medium.com/hackernoon/how-to-build-a-react-project-from-scratch-using-webpack-4-and-babel-56d4a26afd32
+
+- https://medium.com/free-code-camp/how-to-set-up-deploy-your-react-app-from-scratch-using-webpack-and-babel-a669891033d4
